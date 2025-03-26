@@ -1,56 +1,84 @@
 #include "byte_stream.hh"
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <sys/types.h>
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
+ByteStream::ByteStream( uint64_t capacity )
+  : buffer_(), capacity_( capacity ), write_cnt_( 0 ), read_cnt_( 0 ), error_( false ), is_closed_( false )
+{}
 
 void Writer::push( string data )
 {
-  (void)data; // Your code here.
+  if ( is_closed() || data.empty() ) {
+    return;
+  }
+  if ( data.size() > available_capacity() ) {
+    data.resize( available_capacity() );
+  }
+  if ( !data.empty() ) {
+    uint64_t write_len = data.size();
+    buffer_.push_back( std::move( data ) );
+    write_cnt_ += write_len;
+  }
 }
 
 void Writer::close()
 {
-  // Your code here.
+  is_closed_ = true;
 }
 
 bool Writer::is_closed() const
 {
-  return {}; // Your code here.
+  return is_closed_;
 }
 
 uint64_t Writer::available_capacity() const
 {
-  return {}; // Your code here.
+  return capacity_ - write_cnt_ + read_cnt_;
 }
 
 uint64_t Writer::bytes_pushed() const
 {
-  return {}; // Your code here.
+  return write_cnt_;
 }
 
 string_view Reader::peek() const
 {
-  return {}; // Your code here.
+  if ( buffer_.empty() ) {
+    return ""sv;
+  }
+  return buffer_.front();
 }
  
 void Reader::pop( uint64_t len )
 {
-  (void)len; // Your code here.
+  uint64_t size = min( len, bytes_buffered() );
+  read_cnt_ += size;
+  if ( size >= buffer_.front().size() ) {
+    size -= buffer_.front().size();
+    buffer_.pop_front();
+  }
+  if ( size > 0 && size < buffer_.front().size() ) {
+    string str = buffer_.front();
+    buffer_.pop_front();
+    buffer_.push_front( str.substr( size ) );
+  }
 }
 
 bool Reader::is_finished() const
 {
-  return {}; // Your code here.
+  return is_closed_ && bytes_buffered() == 0;
 }
 
 uint64_t Reader::bytes_buffered() const
 {
-  return {}; // Your code here.
+  return write_cnt_ - read_cnt_;
 }
 
 uint64_t Reader::bytes_popped() const
 {
-  return {}; // Your code here.
+  return read_cnt_;
 }
-
