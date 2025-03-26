@@ -27,6 +27,7 @@ macro(add_speed_test exec_name)
   target_compile_options("${exec_name}" PUBLIC -O2 -DNDEBUG)
   target_link_libraries("${exec_name}" minnow_optimized)
   target_link_libraries("${exec_name}" util_optimized)
+  target_link_libraries("${exec_name}" fmt)
   add_dependencies(speed_testing "${exec_name}")
 endmacro(add_speed_test)
 

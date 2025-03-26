@@ -1,6 +1,6 @@
 #pragma once
 
-#include <format>
+#include <fmt/format.h>
 #include <string_view>
 
 // The `debug` function can be called from anywhere and tries to print debugging
@@ -11,7 +11,7 @@
 void debug_str( std::string_view message );
 
 template<typename... Args>
-void debug( std::format_string<Args...> fmt, Args&&... args )
+void debug( fmt::format_string<Args...> fmt, Args&&... args )
 {
 #ifndef NDEBUG
   debug_str( format( fmt, std::forward<Args>( args )... ) );
