@@ -1,6 +1,9 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include <cstdint>
+#include <list>
+#include <sys/types.h>
 
 class Reassembler
 {
@@ -42,5 +45,16 @@ public:
   const Writer& writer() const { return output_.writer(); }
 
 private:
+  void push_bytes( uint64_t first_index, std::string data, bool is_last_substring );
+
+  void cache_bytes( uint64_t first_index, std::string data );
+
+  void flush_buffer();
+
+private:
   ByteStream output_;
+  std::list<std::pair<uint64_t, std::string>> buffer_ {};
+  uint64_t expect_index_ {};
+  bool has_last_substring_ {};
+  uint64_t bytes_stored_ {};
 };

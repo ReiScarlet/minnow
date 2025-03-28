@@ -6,7 +6,7 @@
 
 class Reader;
 class Writer;
-
+ 
 class ByteStream
 {
 public:
