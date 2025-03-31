@@ -1,6 +1,5 @@
 #include "reassembler.hh"
 #include "byte_stream.hh"
-#include "debug.hh"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>

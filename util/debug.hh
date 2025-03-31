@@ -1,6 +1,6 @@
 #pragma once
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <string_view>
 
 // The `debug` function can be called from anywhere and tries to print debugging
