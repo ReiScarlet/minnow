@@ -29,14 +29,17 @@ void TCPReceiver::receive( TCPSenderMessage message )
 
 TCPReceiverMessage TCPReceiver::send() const
 {
-  const uint64_t checkpoint = reassembler_.writer().bytes_pushed();
+  uint64_t abs_ackno = reassembler_.writer().bytes_pushed() + 1;
+  if ( reassembler_.writer().is_closed() ) {
+    ++abs_ackno;
+  }
   const uint64_t capacity = reassembler_.writer().available_capacity();
   const uint16_t windows_size = capacity > UINT16_MAX ? UINT16_MAX : capacity;
   if ( !isn_.has_value() ) {
     return { .ackno = {}, .window_size = windows_size, .RST = reassembler_.writer().has_error() };
   }
 
-  return { .ackno = Wrap32::wrap( checkpoint, isn_.value() ),
+  return { .ackno = Wrap32::wrap( abs_ackno, isn_.value() ),
            .window_size = windows_size,
            .RST = reassembler_.writer().has_error() };
 }
