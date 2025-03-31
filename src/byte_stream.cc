@@ -52,7 +52,7 @@ string_view Reader::peek() const
   }
   return buffer_.front();
 }
-
+ 
 void Reader::pop( uint64_t len )
 {
   uint64_t size = min( len, bytes_buffered() );
