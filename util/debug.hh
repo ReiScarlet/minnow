@@ -1,7 +1,8 @@
 #pragma once
 
-#include <fmt/format.h>
+#define FMT_HEADER_ONLY
 #include <string_view>
+#include <fmt/format.h>
 
 // The `debug` function can be called from anywhere and tries to print debugging
 // information in the most convenient place.

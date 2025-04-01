@@ -4,7 +4,10 @@
 #include "tcp_receiver_message.hh"
 #include "tcp_sender_message.hh"
 
+#include <cstdint>
+#include <deque>
 #include <functional>
+#include <map>
 
 class TCPSender
 {
@@ -42,4 +45,18 @@ private:
   ByteStream input_;
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
+
+  uint64_t cur_RTO_ms_ {};
+  uint64_t cur_time_ {};
+  uint64_t expire_time_ {};
+
+  uint64_t abs_seqno_ {};
+  uint64_t ackno_ {};
+  uint64_t outstanding_bytes_ {};
+  uint16_t window_size_ {};
+  std::deque<TCPSenderMessage> outstanding_msg_ {};
+  uint64_t retrans_cnt_ {};
+  uint64_t in_flight_cnt_ {};
+  bool is_fin_sent { false };
+  bool running { true };
 };
