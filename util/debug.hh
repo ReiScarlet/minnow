@@ -1,8 +1,7 @@
 #pragma once
 
-#define FMT_HEADER_ONLY
+#include <format>
 #include <string_view>
-#include <fmt/format.h>
 
 // The `debug` function can be called from anywhere and tries to print debugging
 // information in the most convenient place.
@@ -13,7 +12,7 @@ void debug_str( std::string_view message );
 
 template<typename... Args>
 // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
-void debug( fmt::format_string<Args...> fmt [[maybe_unused]], Args&&... args [[maybe_unused]] )
+void debug( std::format_string<Args...> fmt [[maybe_unused]], Args&&... args [[maybe_unused]] )
 {
 #ifndef NDEBUG
   debug_str( format( fmt, std::forward<Args>( args )... ) );
