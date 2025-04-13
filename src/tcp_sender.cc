@@ -22,11 +22,13 @@ uint64_t TCPSender::consecutive_retransmissions() const
 
 void TCPSender::push( const TransmitFunction& transmit )
 {
+  debug( "push" );
   uint64_t windows_zero = window_size_ == 0 ? 1 : 0;
   uint64_t windows_capacity
     = ( window_size_ + windows_zero ) < in_flight_cnt_ ? 0 : window_size_ + windows_zero - in_flight_cnt_;
   do {
     if ( is_fin_sent ) {
+      debug( "is_fin_sent" );
       return;
     }
 
@@ -52,12 +54,14 @@ void TCPSender::push( const TransmitFunction& transmit )
     }
 
     if ( reader().is_finished() && seq_size < windows_capacity ) {
+      debug( "set fin" );
       msg.FIN = true;
       seq_size--;
       is_fin_sent = true;
     }
 
     if ( msg.sequence_length() == 0 ) {
+      debug( "msg.sequence_length() == 0" );
       return;
     }
 
@@ -66,11 +70,13 @@ void TCPSender::push( const TransmitFunction& transmit )
     in_flight_cnt_ += msg.sequence_length();
     outstanding_msg_.push_back( msg );
     transmit( msg );
-    if ( expire_time_ == UINT16_MAX ) {
+    if ( expire_time_ == UINT64_MAX ) {
       expire_time_ = cur_time_ + cur_RTO_ms_;
     }
     windows_capacity
       = ( window_size_ + windows_zero ) < in_flight_cnt_ ? 0 : window_size_ + windows_zero - in_flight_cnt_;
+    debug(
+      "abs_seqno_:{} msg.sequence_length:{} expire_time_:{}", abs_seqno_, msg.sequence_length(), expire_time_ );
   } while ( windows_capacity != 0 && reader().bytes_buffered() != 0 );
 }
 
@@ -85,12 +91,15 @@ TCPSenderMessage TCPSender::make_empty_message() const
 
 void TCPSender::receive( const TCPReceiverMessage& msg )
 {
+  debug( "receive" );
   if ( msg.ackno.has_value() ) {
     uint64_t ack_from_recv = msg.ackno->unwrap( isn_, abs_seqno_ );
+    debug( "ack_from_recv:{} ackno_:{} abs_seqno_:{}", ack_from_recv, ackno_, abs_seqno_ );
     if ( ack_from_recv > ackno_ && ack_from_recv <= abs_seqno_ ) {
       ackno_ = ack_from_recv;
       cur_RTO_ms_ = initial_RTO_ms_;
       expire_time_ = cur_time_ + cur_RTO_ms_;
+      debug( "expire_time_:{}", expire_time_ );
       retrans_cnt_ = 0;
       while ( !outstanding_msg_.empty() ) {
         auto& front_msg = outstanding_msg_.front();
@@ -102,6 +111,7 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
       }
       if ( outstanding_msg_.empty() ) {
         expire_time_ = UINT64_MAX;
+        debug( "outstanding_msg_.empty() = true expire_time_:{}", expire_time_ );
       }
     }
   }
@@ -114,12 +124,20 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
 void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& transmit )
 {
   cur_time_ += ms_since_last_tick;
+  debug( "tick" );
+  debug( " cur_time_:{} ms_since_last_tick:{} expire_time_:{} window_size_:{}",
+         cur_time_,
+         ms_since_last_tick,
+         expire_time_,
+         window_size_ );
   if ( expire_time_ != 0 && cur_time_ >= expire_time_ ) {
-    transmit( outstanding_msg_.front() );
+    auto& front_msg = outstanding_msg_.front();
+    transmit( front_msg );
     if ( window_size_ != 0 ) {
       retrans_cnt_++;
       cur_RTO_ms_ *= 2;
     }
     expire_time_ = cur_time_ + cur_RTO_ms_;
   }
+  debug( "expire_time_:{}", expire_time_ );
 }
